@@ -1,6 +1,3 @@
-import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/+esm';
-import { fetchFile, toBlobURL } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/+esm';
-
 let ffmpeg = null;
 let selectedFiles = [];
 let convertedFiles = [];
@@ -21,29 +18,33 @@ document.addEventListener('DOMContentLoaded', () => {
     downloadBtn = document.getElementById('downloadBtn');
 
     initListeners();
+    loadFFmpegScript();
 });
+
+// Завантаження FFmpeg скрипта
+function loadFFmpegScript() {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js';
+    script.onload = () => console.log('FFmpeg loaded');
+    script.onerror = () => console.error('FFmpeg failed to load');
+    document.head.appendChild(script);
+}
 
 // Ініціалізація FFmpeg
 async function loadFFmpeg() {
     if (ffmpeg) return;
 
-    const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
-
-    ffmpeg = new FFmpeg();
-
-    ffmpeg.on('log', ({ message }) => {
-        console.log(message);
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    ffmpeg = createFFmpeg({
+        log: true,
+        corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
+        progress: ({ ratio }) => {
+            const percent = Math.round(ratio * 100);
+            progressFill.style.width = percent + '%';
+        }
     });
 
-    ffmpeg.on('progress', ({ progress: p, time }) => {
-        const percent = Math.round(p * 100);
-        progressFill.style.width = percent + '%';
-    });
-
-    await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    });
+    await ffmpeg.load();
 }
 
 function initListeners() {
@@ -128,10 +129,11 @@ async function convertFiles() {
             const outputName = `output_${i}.mp4`;
 
             // Завантаження файлу в FFmpeg
-            await ffmpeg.writeFile(inputName, await fetchFile(file));
+            const { fetchFile } = FFmpeg;
+            ffmpeg.FS('writeFile', inputName, await fetchFile(file));
 
             // Конвертація
-            await ffmpeg.exec([
+            await ffmpeg.run(
                 '-i', inputName,
                 '-c:v', 'libx264',
                 '-preset', 'fast',
@@ -139,10 +141,10 @@ async function convertFiles() {
                 '-c:a', 'aac',
                 '-b:a', '128k',
                 outputName
-            ]);
+            );
 
             // Отримання результату
-            const data = await ffmpeg.readFile(outputName);
+            const data = ffmpeg.FS('readFile', outputName);
             const blob = new Blob([data.buffer], { type: 'video/mp4' });
             const fileName = file.name.replace(/\.mov$/i, '.mp4');
 
@@ -154,10 +156,6 @@ async function convertFiles() {
 
             // Затримка перед наступним завантаженням для Chrome
             await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Очищення
-            await ffmpeg.deleteFile(inputName);
-            await ffmpeg.deleteFile(outputName);
 
             statusEl.textContent = '✓ Готово';
             statusEl.style.color = '#4caf50';
