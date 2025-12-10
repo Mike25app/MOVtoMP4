@@ -187,7 +187,9 @@ function downloadFile(blob, fileName) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+    // Видаляємо blob URL через 100мс після завантаження
+    setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
 function resetApp() {
@@ -195,6 +197,13 @@ function resetApp() {
     fileList.classList.add('hidden');
     controls.classList.add('hidden');
     dropZone.querySelector('p').textContent = 'Перетягніть MOV файли сюди або клікніть для вибору';
+
+    // Очищуємо всі blob об'єкти з пам'яті
+    convertedFiles.forEach(({ blob }) => {
+        // Blob автоматично очиститься GC, але видаляємо посилання
+        blob = null;
+    });
+
     selectedFiles = [];
     convertedFiles = [];
     progressFill.style.width = '0%';
