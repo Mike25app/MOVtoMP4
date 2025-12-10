@@ -123,12 +123,12 @@ async function convertFiles() {
             // Завантаження файлу в FFmpeg
             ffmpeg.FS('writeFile', inputName, await fetchFile(file));
 
-            // Конвертація
+            // Конвертація (ultrafast preset для швидкості)
             await ffmpeg.run(
                 '-i', inputName,
                 '-c:v', 'libx264',
-                '-preset', 'fast',
-                '-crf', '23',
+                '-preset', 'ultrafast',
+                '-crf', '28',
                 '-c:a', 'aac',
                 '-b:a', '128k',
                 outputName
