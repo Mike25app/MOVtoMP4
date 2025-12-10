@@ -1,5 +1,6 @@
-import { FFmpeg } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm/ffmpeg.js';
-import { fetchFile, toBlobURL } from 'https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js';
+// UMD версія - FFmpeg і toBlobURL доступні глобально
+const { FFmpeg } = FFmpegWASM;
+const { toBlobURL, fetchFile } = FFmpegUtil;
 
 let ffmpeg = null;
 let selectedFiles = [];
@@ -23,11 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initListeners();
 });
 
-// Ініціалізація FFmpeg з toBlobURL для всіх файлів
+// Ініціалізація FFmpeg з toBlobURL для обходу CORS
 async function loadFFmpeg() {
     if (ffmpeg) return;
 
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+    const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
 
     ffmpeg = new FFmpeg();
 
@@ -40,7 +41,7 @@ async function loadFFmpeg() {
         progressFill.style.width = percent + '%';
     });
 
-    // Використовуємо toBlobURL для всіх файлів - це обходить CORS блокування
+    // toBlobURL завантажує файли і створює локальні blob URLs
     await ffmpeg.load({
         coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
         wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
@@ -200,7 +201,6 @@ function resetApp() {
 
     // Очищуємо всі blob об'єкти з пам'яті
     convertedFiles.forEach(({ blob }) => {
-        // Blob автоматично очиститься GC, але видаляємо посилання
         blob = null;
     });
 
