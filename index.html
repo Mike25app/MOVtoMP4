@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOV → MP4 Конвертер</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>MOV → MP4</h1>
+        <div id="dropZone" class="drop-zone">
+            <p>Перетягніть MOV файли сюди або клікніть для вибору</p>
+            <input type="file" id="fileInput" accept="video/quicktime,.mov" multiple hidden>
+        </div>
+        <div id="fileList" class="file-list hidden"></div>
+        <div id="controls" class="controls hidden">
+            <button id="convertBtn">Конвертувати всі в MP4</button>
+        </div>
+        <div id="progress" class="progress hidden">
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+            <p id="progressText">0%</p>
+        </div>
+        <div id="result" class="result hidden">
+            <p id="resultText">✓ Готово!</p>
+            <button id="downloadBtn">Конвертувати ще</button>
+        </div>
+    </div>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
